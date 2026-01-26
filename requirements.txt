@@ -1,0 +1,19 @@
+# CyberRisk Monitor - Dependencies
+# Core requirements (standard library only for core functionality)
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Optional: Web dashboard (uncomment if using)
+# streamlit>=1.30.0
+# flask>=3.0.0
+
+# Development
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.0.0
+
+# Documentation
+# sphinx>=7.0.0
+# sphinx-rtd-theme>=2.0.0

@@ -1,0 +1,22 @@
+timestamp,event_type,source_ip,dest_ip,user,port,severity,message
+2026-01-26 11:00:00,authentication_failure,192.168.1.50,,bob,,warning,Failed password for bob
+2026-01-26 11:00:10,authentication_failure,192.168.1.50,,bob,,warning,Failed password for bob
+2026-01-26 11:00:20,authentication_failure,192.168.1.50,,bob,,warning,Failed password for bob
+2026-01-26 11:00:30,authentication_failure,192.168.1.50,,bob,,warning,Failed password for bob
+2026-01-26 11:00:40,authentication_failure,192.168.1.50,,bob,,warning,Failed password for bob
+2026-01-26 11:00:50,authentication_success,192.168.1.50,,bob,,info,Accepted password for bob
+2026-01-26 11:05:00,network_scan,192.168.1.200,192.168.1.1,,22,warning,Connection attempt to port 22
+2026-01-26 11:05:01,network_scan,192.168.1.200,192.168.1.1,,23,warning,Connection attempt to port 23
+2026-01-26 11:05:02,network_scan,192.168.1.200,192.168.1.1,,25,warning,Connection attempt to port 25
+2026-01-26 11:05:03,network_scan,192.168.1.200,192.168.1.1,,80,warning,Connection attempt to port 80
+2026-01-26 11:05:04,network_scan,192.168.1.200,192.168.1.1,,443,warning,Connection attempt to port 443
+2026-01-26 11:05:05,network_scan,192.168.1.200,192.168.1.1,,3306,warning,Connection attempt to port 3306
+2026-01-26 11:05:06,network_scan,192.168.1.200,192.168.1.1,,5432,warning,Connection attempt to port 5432
+2026-01-26 11:05:07,network_scan,192.168.1.200,192.168.1.1,,6379,warning,Connection attempt to port 6379
+2026-01-26 11:05:08,network_scan,192.168.1.200,192.168.1.1,,8080,warning,Connection attempt to port 8080
+2026-01-26 11:05:09,network_scan,192.168.1.200,192.168.1.1,,27017,warning,Connection attempt to port 27017
+2026-01-26 11:10:00,privilege_escalation,10.0.0.100,,alice,,critical,User alice executed sudo su - root
+2026-01-26 11:15:00,file_access,10.0.0.100,,alice,,warning,User alice read /etc/shadow
+2026-01-26 11:20:00,account_creation,10.0.0.100,,root,,info,New user created: backdoor with admin privileges
+2026-01-26 11:25:00,service_stop,,,system,,high,Service sshd terminated unexpectedly
+2026-01-26 11:30:00,database_access,192.168.1.75,,dbadmin,,warning,Database query: DROP TABLE users

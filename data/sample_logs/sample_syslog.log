@@ -1,0 +1,38 @@
+Jan 26 08:15:22 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52431 ssh2
+Jan 26 08:15:25 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52432 ssh2
+Jan 26 08:15:28 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52433 ssh2
+Jan 26 08:15:31 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52434 ssh2
+Jan 26 08:15:34 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52435 ssh2
+Jan 26 08:15:37 webserver sshd[12345]: Failed password for admin from 192.168.1.105 port 52436 ssh2
+Jan 26 08:16:01 webserver sshd[12346]: Accepted password for jsmith from 10.0.0.50 port 43210 ssh2
+Jan 26 08:17:15 webserver sudo[12400]: jsmith : TTY=pts/0 ; PWD=/home/jsmith ; USER=root ; COMMAND=/bin/bash
+Jan 26 08:18:22 webserver kernel: TCP: connection refused from 192.168.1.200 port 22
+Jan 26 08:18:23 webserver kernel: TCP: connection refused from 192.168.1.200 port 23
+Jan 26 08:18:24 webserver kernel: TCP: connection refused from 192.168.1.200 port 25
+Jan 26 08:18:25 webserver kernel: TCP: connection refused from 192.168.1.200 port 80
+Jan 26 08:18:26 webserver kernel: TCP: connection refused from 192.168.1.200 port 443
+Jan 26 08:18:27 webserver kernel: TCP: connection refused from 192.168.1.200 port 3306
+Jan 26 08:18:28 webserver kernel: TCP: connection refused from 192.168.1.200 port 5432
+Jan 26 08:18:29 webserver kernel: TCP: connection refused from 192.168.1.200 port 8080
+Jan 26 08:18:30 webserver kernel: TCP: connection refused from 192.168.1.200 port 8443
+Jan 26 08:18:31 webserver kernel: TCP: connection refused from 192.168.1.200 port 9000
+Jan 26 08:18:32 webserver kernel: TCP: connection refused from 192.168.1.200 port 27017
+Jan 26 08:20:00 webserver sshd[12500]: Failed password for invalid user test from 203.0.113.50 port 51000 ssh2
+Jan 26 08:20:05 webserver sshd[12501]: Failed password for invalid user guest from 203.0.113.50 port 51001 ssh2
+Jan 26 08:20:10 webserver sshd[12502]: Failed password for invalid user admin from 203.0.113.50 port 51002 ssh2
+Jan 26 08:25:00 webserver apache2[13000]: 192.168.1.150 - - "GET /admin/config.php HTTP/1.1" 403 287
+Jan 26 08:25:05 webserver apache2[13001]: 192.168.1.150 - - "GET /phpmyadmin/ HTTP/1.1" 404 274
+Jan 26 08:30:00 webserver systemd[1]: nginx.service: Service stopped unexpectedly
+Jan 26 08:30:15 webserver systemd[1]: Starting nginx.service - A high performance web server...
+Jan 26 08:35:00 webserver useradd[14000]: new user: name=backdoor, UID=1005, GID=1005, home=/home/backdoor
+Jan 26 08:35:05 webserver usermod[14001]: add 'backdoor' to group 'sudo'
+Jan 26 08:40:00 dbserver mysql[15000]: Access denied for user 'attacker'@'192.168.1.200' (using password: YES)
+Jan 26 08:45:00 webserver kernel: audit: type=1400 audit(1706270700.000:100): apparmor="DENIED" operation="open" profile="usr.sbin.apache2" name="/etc/shadow" pid=13500
+Jan 26 08:50:00 webserver sshd[16000]: Accepted publickey for deploy from 10.0.0.100 port 44000 ssh2
+Jan 26 08:51:00 webserver sshd[16100]: Accepted publickey for deploy from 10.0.0.101 port 44100 ssh2
+Jan 26 08:52:00 webserver sshd[16200]: Accepted publickey for deploy from 10.0.0.102 port 44200 ssh2
+Jan 26 08:55:00 fileserver smbd[17000]: user admin connected from 192.168.1.50
+Jan 26 09:00:00 webserver cron[18000]: (root) CMD (/usr/local/bin/backup.sh)
+Jan 26 09:05:00 mailserver postfix/smtpd[19000]: connect from unknown[192.168.1.75]
+Jan 26 09:10:00 webserver kernel: iptables: rule added: INPUT -s 192.168.1.200 -j DROP
+Jan 26 09:15:00 webserver apache2[20000]: 192.168.1.100 - admin [26/Jan/2026:09:15:00 +0000] "POST /api/users HTTP/1.1" 201 156

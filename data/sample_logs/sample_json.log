@@ -1,0 +1,15 @@
+{"timestamp": "2026-01-26T10:00:00Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Failed login attempt for user jdoe", "severity": "warning"}
+{"timestamp": "2026-01-26T10:00:15Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Failed login attempt for user jdoe", "severity": "warning"}
+{"timestamp": "2026-01-26T10:00:30Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Failed login attempt for user jdoe", "severity": "warning"}
+{"timestamp": "2026-01-26T10:00:45Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Failed login attempt for user jdoe", "severity": "warning"}
+{"timestamp": "2026-01-26T10:01:00Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Failed login attempt for user jdoe", "severity": "warning"}
+{"timestamp": "2026-01-26T10:01:15Z", "event_type": "authentication", "source_ip": "192.168.1.100", "user": "jdoe", "message": "Account locked after multiple failed attempts", "severity": "critical"}
+{"timestamp": "2026-01-26T10:05:00Z", "event_type": "network", "source_ip": "10.0.0.50", "dest_ip": "192.168.1.1", "port": 443, "message": "Successful HTTPS connection established", "severity": "info"}
+{"timestamp": "2026-01-26T10:10:00Z", "event_type": "file_access", "user": "admin", "message": "User admin accessed /etc/passwd", "severity": "warning"}
+{"timestamp": "2026-01-26T10:15:00Z", "event_type": "privilege_escalation", "user": "webuser", "message": "User webuser executed sudo command: /bin/bash", "severity": "high"}
+{"timestamp": "2026-01-26T10:20:00Z", "event_type": "malware", "source_ip": "192.168.1.200", "message": "Potential ransomware activity detected: file encryption patterns", "severity": "critical"}
+{"timestamp": "2026-01-26T10:25:00Z", "event_type": "database", "user": "appuser", "message": "Database query executed: SELECT * FROM users WHERE role='admin'", "severity": "info"}
+{"timestamp": "2026-01-26T10:30:00Z", "event_type": "firewall", "user": "root", "message": "Firewall rule modified: iptables -A INPUT -s 0.0.0.0/0 -j ACCEPT", "severity": "critical"}
+{"timestamp": "2026-01-26T10:35:00Z", "event_type": "authentication", "source_ip": "203.0.113.100", "user": "root", "message": "Successful SSH login for root from external IP", "severity": "warning"}
+{"timestamp": "2026-01-26T10:40:00Z", "event_type": "data_transfer", "source_ip": "192.168.1.50", "message": "Large outbound transfer detected: 500MB sent to external server", "severity": "high"}
+{"timestamp": "2026-01-26T10:45:00Z", "event_type": "service", "message": "Critical service apache2 stopped unexpectedly", "severity": "high"}
