@@ -20,6 +20,7 @@ from cyberrisk.core.log_parser import LogParser
 from cyberrisk.core.rule_engine import RuleEngine
 from cyberrisk.core.risk_scorer import RiskScorer
 from cyberrisk.reporting.report_generator import ReportGenerator
+from cyberrisk.storage import save_run  # <-- ADDED (persistence)
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -47,6 +48,25 @@ def get_default_rules_path() -> Path:
         return cwd_rules
 
     return rules_path
+
+
+def _serialize_detections(detections) -> list:
+    """
+    Convert detections to JSON-friendly objects.
+
+    Tries Detection.toDict() if available; otherwise falls back to str().
+    This keeps persistence robust even if the Detection model changes.
+    """
+    out = []
+    for d in detections:
+        if hasattr(d, "toDict") and callable(getattr(d, "toDict")):
+            try:
+                out.append(d.toDict())
+                continue
+            except Exception:
+                pass
+        out.append(str(d))
+    return out
 
 
 def analyze_logs(args: argparse.Namespace) -> int:
@@ -116,6 +136,26 @@ def analyze_logs(args: argparse.Namespace) -> int:
         generator = ReportGenerator()
         report = generator.generate_summary(assessment)
         print(report)
+
+        # --- Persist run results (backend persistence) ---
+        # This saves results so the UI can load run history later.
+        try:
+            run_id = save_run({
+                "input_path": str(log_path),
+                "rules_path": str(rules_path),
+                "parsed_entries": len(entries),
+                "rules_loaded": int(num_rules),
+                "detections_count": len(detections),
+                "summary": {
+                    "risk_level": str(assessment.risk_category),
+                    "total_score": int(assessment.total_score),
+                },
+                "detections": _serialize_detections(detections),
+            })
+            print(f"\nSaved run results to: data/runs/{run_id}.json")
+        except Exception as e:
+            # Don’t fail the analysis if saving fails; just warn.
+            logger.warning("Could not save run results: %s", e)
 
         # Export report if requested
         if args.output:
