@@ -102,8 +102,16 @@ def main():
         ("Privilege Escalation", "Critical", "192.168.1.3", "Jan 20, 2026"),
     ]
 
-    for alert in mock_alerts:
-        tree.insert("", tk.END, values=alert)
+    def refresh_alerts(event=None):
+        """Filter alerts based on selected severity."""
+        tree.delete(*tree.get_children())
+        selected = severity_filter.get()
+        for alert in mock_alerts:
+            if selected == "All" or alert[1] == selected:
+                tree.insert("", tk.END, values=alert)
+
+    severity_filter.bind("<<ComboboxSelected>>", refresh_alerts)
+    refresh_alerts()
 
     # Scrollbar
     scrollbar = ttk.Scrollbar(alerts_frame, orient=tk.VERTICAL, command=tree.yview)
