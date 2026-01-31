@@ -12,7 +12,7 @@ setup(
     version="0.1.0",
     author="CyberRisk Team",
     author_email="cyberrisk@example.com",
-    description="A lightweight rule-based cybersecurity monitoring and risk assessment tool",
+    description="A lightweight rule-based cybersecurity monitoring and risk assessment tool, that a group of total cool folks are building for their CMSC 495 capstone project.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/CMSC-495-capstone-spring2026-cyberrisk/CyberRisk",
