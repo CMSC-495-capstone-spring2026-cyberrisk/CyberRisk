@@ -42,7 +42,6 @@ htmlcov/
 
 # Logs and outputs
 *.log
-output/
 reports/
 
 # OS
