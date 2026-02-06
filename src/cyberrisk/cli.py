@@ -20,6 +20,7 @@ from cyberrisk.core.log_parser import LogParser
 from cyberrisk.core.rule_engine import RuleEngine
 from cyberrisk.core.risk_scorer import RiskScorer
 from cyberrisk.reporting.report_generator import ReportGenerator
+from cyberrisk.storage import save_run  # persistence layer
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -47,6 +48,24 @@ def get_default_rules_path() -> Path:
         return cwd_rules
 
     return rules_path
+
+
+def _serialize_detections(detections) -> list:
+    """
+    Convert detections to JSON-friendly objects.
+
+    Tries Detection.toDict() if available; otherwise falls back to str().
+    """
+    out = []
+    for d in detections:
+        if hasattr(d, "toDict") and callable(getattr(d, "toDict")):
+            try:
+                out.append(d.toDict())
+                continue
+            except Exception:
+                pass
+        out.append(str(d))
+    return out
 
 
 def analyze_logs(args: argparse.Namespace) -> int:
@@ -117,6 +136,30 @@ def analyze_logs(args: argparse.Namespace) -> int:
         report = generator.generate_summary(assessment)
         print(report)
 
+        # --- Persist run results (backend persistence) ---
+        # Save a stable JSON payload so the UI can load the latest run.
+        try:
+            payload = {
+                "input_path": str(log_path),
+                "rules_path": str(rules_path),
+                "parsed_entries": len(entries),
+                "rules_loaded": int(num_rules),
+                "detections_count": len(detections),
+                "summary": {
+                    "risk_level": str(getattr(assessment, "risk_category", "Unknown")),
+                    "total_score": int(getattr(assessment, "total_score", 0)),
+                },
+                "detections": _serialize_detections(detections),
+            }
+
+            saved_path = save_run(payload)
+            print(f"\nSaved run results to: {saved_path}")
+            print("Latest run pointer updated: data/runs/latest.json")
+
+        except Exception as e:
+            # Don’t fail the analysis if saving fails; just warn.
+            logger.warning("Could not save run results: %s", e)
+
         # Export report if requested
         if args.output:
             output_path = Path(args.output)
@@ -125,9 +168,9 @@ def analyze_logs(args: argparse.Namespace) -> int:
             print(f"\nReport exported to: {output_path}")
 
         # Return appropriate exit code based on risk level
-        if assessment.risk_category == "Critical":
+        if getattr(assessment, "risk_category", "") == "Critical":
             return 2
-        elif assessment.risk_category == "High":
+        elif getattr(assessment, "risk_category", "") == "High":
             return 1
         return 0
 
@@ -175,15 +218,7 @@ Examples:
   cyberrisk analyze logs/auth.json -o report.html -f html
   cyberrisk analyze data.csv --rules custom_rules.json -v
   cyberrisk list-rules
-
-For more information, visit: https://github.com/CMSC-495-capstone-spring2026-cyberrisk/CyberRisk
         """,
-    )
-
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output",
     )
 
     parser.add_argument(
@@ -247,6 +282,10 @@ def main() -> int:
         return 0
 
     return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
 
 if __name__ == "__main__":
