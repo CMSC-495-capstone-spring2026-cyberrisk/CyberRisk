@@ -54,13 +54,13 @@ def _serialize_detections(detections) -> list:
     """
     Convert detections to JSON-friendly objects.
 
-    Tries Detection.toDict() if available; otherwise falls back to str().
+    Tries Detection.to_dict() if available; otherwise falls back to str().
     """
     out = []
     for d in detections:
-        if hasattr(d, "toDict") and callable(getattr(d, "toDict")):
+        if hasattr(d, "to_dict") and callable(getattr(d, "to_dict")):
             try:
-                out.append(d.toDict())
+                out.append(d.to_dict())
                 continue
             except Exception:
                 pass
