@@ -139,6 +139,17 @@ def analyze_logs(args: argparse.Namespace) -> int:
         # --- Persist run results (backend persistence) ---
         # Save a stable JSON payload so the UI can load the latest run.
         try:
+            # Build a map from detection_id -> scored risk_category so the
+            # UI displays the same severity labels as the CLI report.
+            scored_category_map = {}
+            for se in assessment.scored_events:
+                scored_category_map[se.detection.detection_id] = se.risk_category
+
+            serialized = _serialize_detections(detections)
+            for det in serialized:
+                if isinstance(det, dict) and det.get("detection_id") in scored_category_map:
+                    det["severity_label"] = scored_category_map[det["detection_id"]]
+
             payload = {
                 "input_path": str(log_path),
                 "rules_path": str(rules_path),
@@ -149,7 +160,7 @@ def analyze_logs(args: argparse.Namespace) -> int:
                     "risk_level": str(getattr(assessment, "risk_category", "Unknown")),
                     "total_score": int(getattr(assessment, "total_score", 0)),
                 },
-                "detections": _serialize_detections(detections),
+                "detections": serialized,
             }
 
             saved_path = save_run(payload)
@@ -157,7 +168,7 @@ def analyze_logs(args: argparse.Namespace) -> int:
             print("Latest run pointer updated: data/runs/latest.json")
 
         except Exception as e:
-            # Don’t fail the analysis if saving fails; just warn.
+            # Don't fail the analysis if saving fails; just warn.
             logger.warning("Could not save run results: %s", e)
 
         # Export report if requested
@@ -282,10 +293,6 @@ def main() -> int:
         return 0
 
     return args.func(args)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
 
 
 if __name__ == "__main__":
