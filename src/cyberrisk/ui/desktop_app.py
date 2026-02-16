@@ -8,6 +8,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+from PIL import Image, ImageTk
+
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -15,6 +17,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 RUN_PATH = Path("data/runs/latest.json")
+
+# Brand colors for the top banner (matches the shield icon's teal glow)
+BRAND_BG = "#0b2f3a"
+BRAND_BORDER = "#0f4b5a"
 
 
 def load_latest_run():
@@ -135,6 +141,11 @@ def apply_theme(style: ttk.Style, dark: bool):
         heading_bg = "#f0f0f0"
         heading_fg = "#000000"
 
+    # Banner (top header) — always teal so the shield icon blends in both modes
+    style.configure("Banner.TFrame", background=BRAND_BG)
+    style.configure("Banner.TLabel", background=BRAND_BG, foreground="#ffffff")
+    style.configure("Banner.TCheckbutton", background=BRAND_BG, foreground="#ffffff")
+
     # Root background
     style.configure("App.TFrame", background=bg)
     style.configure("Panel.TFrame", background=panel)
@@ -189,14 +200,50 @@ def apply_theme(style: ttk.Style, dark: bool):
 
 
 
-def main():
-    root = tk.Tk()
-    style = ttk.Style(root)
-    default_theme = style.theme_use()
-    dark_mode = tk.BooleanVar(value=False)
-    root.configure(bg="#1e1e1e" if dark_mode.get() else "#f0f0f0")
-    root.title("CyberRisk Monitor")
+def load_app_icon(root):
+    """Load the shield icon for the window and return a small PhotoImage for the header.
 
+    Tries assets/shield_eye.ico first (preferred on Windows), then
+    assets/shield_eye.png.  Returns a tk.PhotoImage sized for the header
+    (~32 px) or *None* if neither file is usable.
+    """
+    assets_dir = Path(__file__).resolve().parent.parent.parent.parent / "assets"
+    ico_path = assets_dir / "shield_eye.ico"
+    png_path = assets_dir / "shield_eye.png"
+
+    # ── Window icon ──
+    # Prefer .ico on Windows (works with iconbitmap); fall back to .png
+    try:
+        if ico_path.is_file():
+            root.iconbitmap(str(ico_path))
+        elif png_path.is_file():
+            icon_photo = tk.PhotoImage(file=str(png_path))
+            root.iconphoto(True, icon_photo)
+            root.icon_img = icon_photo  # prevent garbage-collection
+    except tk.TclError:
+        pass  # unsupported format or display issue — silently skip
+
+    # ── Header icon (small inline image) ──
+    try:
+        if png_path.is_file():
+            raw = tk.PhotoImage(file=str(png_path))
+            # Scale down to ~32 px tall
+            orig_h = raw.height()
+            if orig_h > 0:
+                factor = max(1, orig_h // 32)
+                header_icon = raw.subsample(factor, factor)
+            else:
+                header_icon = raw
+            root.header_icon_img = header_icon  # prevent garbage-collection
+            return header_icon
+    except tk.TclError:
+        pass
+    return None
+
+
+def build_dashboard(root, style, default_theme, dark_mode, header_icon,
+                    on_back=None):
+    """Build the main CyberRisk Monitor dashboard."""
     # Variables that we can update on Refresh
     last_analysis_var = tk.StringVar(value="Last Analysis: (not loaded yet)")
     last_loaded_var = tk.StringVar(value="Last Loaded At: (not loaded yet)")
@@ -211,21 +258,26 @@ def main():
     group_by_var = tk.StringVar(value="None")
     generated_at_ref = [""]  # mutable container for the run's generated_at timestamp
 
-    root.geometry("1000x850")
-
     # Header Section — two rows using grid
-    header_top = ttk.Frame(root, padding=(10, 10, 10, 0), style="App.TFrame")
+    header_top = ttk.Frame(root, padding=(10, 10, 10, 0), style="Banner.TFrame")
     header_top.pack(fill=tk.X)
     header_top.columnconfigure(0, weight=1)
     header_top.columnconfigure(1, weight=0)
     header_top.columnconfigure(2, weight=1)
 
-    title_label = ttk.Label(
-        header_top, text="CyberRisk Monitor", style="App.TLabel", font=("Arial", 24, "bold")
-    )
-    title_label.grid(row=0, column=1)
+    title_frame = ttk.Frame(header_top, style="Banner.TFrame")
+    title_frame.grid(row=0, column=1)
 
-    button_frame = ttk.Frame(header_top, style="App.TFrame")
+    title_label = ttk.Label(
+        title_frame, text="CyberRisk Monitor", style="Banner.TLabel", font=("Arial", 24, "bold")
+    )
+    title_label.pack(side=tk.LEFT)
+
+    if header_icon is not None:
+        icon_label = ttk.Label(title_frame, image=header_icon, style="Banner.TLabel")
+        icon_label.pack(side=tk.LEFT, padx=(8, 0))
+
+    button_frame = ttk.Frame(header_top, style="Banner.TFrame")
     button_frame.grid(row=0, column=2, sticky="e")
 
     def _get_filtered_rows():
@@ -533,8 +585,18 @@ def main():
     refresh_btn = tk.Button(button_frame, text="Refresh", relief="flat", padx=10, pady=4)
     refresh_btn.pack(side=tk.LEFT, padx=5)
 
+    # "Back to Title" button — returns to the splash screen
+    tk_buttons = []
+    if on_back is not None:
+        back_btn = tk.Button(
+            button_frame, text="Back to Title", relief="flat", padx=10, pady=4,
+            command=on_back,
+        )
+        back_btn.pack(side=tk.LEFT, padx=5)
+        tk_buttons.append(back_btn)
+
     # Collect tk widgets that need explicit color updates in dark mode
-    tk_buttons = [export_btn, refresh_btn]
+    tk_buttons.extend([export_btn, refresh_btn])
 
     def _apply_tk_colors(dark):
         if dark:
@@ -556,9 +618,10 @@ def main():
             menu_bg, menu_fg = "#ffffff", "#000000"
             muted_fg = "#666666"
 
-        # Buttons
+        # Banner buttons (Export / Refresh sit on the teal header — always teal)
         for btn in tk_buttons:
-            btn.configure(bg=btn_bg, fg=fg, activebackground=btn_active, activeforeground=fg)
+            btn.configure(bg=BRAND_BORDER, fg="#ffffff",
+                          activebackground="#137a8a", activeforeground="#ffffff")
 
         # Table heading row
         for lbl in heading_labels:
@@ -625,21 +688,21 @@ def main():
     dark_btn = ttk.Checkbutton(
         button_frame,
         text="Dark Mode",
-        style="App.TCheckbutton",
+        style="Banner.TCheckbutton",
         variable=dark_mode,
         command=toggle_dark_mode
     )
     dark_btn.pack(side=tk.LEFT, padx=5)
 
-    header_bottom = ttk.Frame(root, padding=(10, 2, 10, 5), style="App.TFrame")
+    header_bottom = ttk.Frame(root, padding=(10, 2, 10, 5), style="Banner.TFrame")
     header_bottom.pack(fill=tk.X)
     header_bottom.columnconfigure(0, weight=1)
     header_bottom.columnconfigure(1, weight=1)
 
-    timestamp_label = ttk.Label(header_bottom, textvariable=last_analysis_var, style="App.TLabel", font=("Arial", 10))
+    timestamp_label = ttk.Label(header_bottom, textvariable=last_analysis_var, style="Banner.TLabel", font=("Arial", 10))
     timestamp_label.grid(row=0, column=0, sticky="w")
 
-    loaded_label = ttk.Label(header_bottom, textvariable=last_loaded_var, style="App.TLabel", font=("Arial", 10))
+    loaded_label = ttk.Label(header_bottom, textvariable=last_loaded_var, style="Banner.TLabel", font=("Arial", 10))
     loaded_label.grid(row=0, column=1, sticky="e")
 
     ttk.Separator(root, orient=tk.HORIZONTAL, style="App.TSeparator").pack(fill=tk.X, pady=10)
@@ -1477,6 +1540,171 @@ def main():
 
     apply_theme(style, dark_mode.get())
     _apply_tk_colors(dark_mode.get())
+
+
+def _read_last_analysis():
+    """Return the 'generated_at' string from the latest run, or a fallback."""
+    try:
+        if RUN_PATH.exists():
+            with RUN_PATH.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data.get("generated_at", "(unknown)")
+    except (json.JSONDecodeError, OSError):
+        pass
+    return "(not found \u2014 run analyze first)"
+
+
+def show_splash(root, on_enter):
+    """Display the title screen; call *on_enter* when the user proceeds.
+
+    If the title image is missing or cannot be loaded, calls *on_enter*
+    immediately so the dashboard launches without a crash.
+    """
+    assets_dir = Path(__file__).resolve().parent.parent.parent.parent / "assets"
+    title_path = assets_dir / "title_screen.png"
+
+    if not title_path.is_file():
+        on_enter()
+        return
+
+    try:
+        pil_img = Image.open(str(title_path))
+    except (OSError, Exception):
+        on_enter()
+        return
+
+    # Keep the original PIL image for resize recalculations
+    root._splash_pil = pil_img
+    orig_w, orig_h = pil_img.size
+
+    # Black background for letterbox bars
+    root.configure(bg="#000000")
+
+    # ── Canvas covers the entire window ──
+    canvas = tk.Canvas(root, bg="#000000", highlightthickness=0)
+    canvas.pack(fill=tk.BOTH, expand=True)
+
+    # ── Overlay frame for controls (black, sits on top of the image) ──
+    overlay = tk.Frame(canvas, bg="#000000")
+
+    analysis_var = tk.StringVar(
+        value=f"Last Analysis: {_read_last_analysis()}"
+    )
+    root._splash_analysis_var = analysis_var
+
+    analysis_lbl = tk.Label(
+        overlay, textvariable=analysis_var,
+        font=("Arial", 10), fg="#ffffff", bg="#000000",
+    )
+    analysis_lbl.pack(pady=(0, 8))
+
+    enter_btn = tk.Button(
+        overlay, text="Enter", font=("Arial", 16, "bold"),
+        bg=BRAND_BORDER, fg="#ffffff", activebackground="#137a8a",
+        activeforeground="#ffffff", relief="flat", padx=40, pady=10,
+        cursor="hand2",
+    )
+    enter_btn.pack(pady=(0, 5))
+
+    hint_label = tk.Label(
+        overlay, text="Press Enter to continue",
+        font=("Arial", 9, "italic"), fg="#aaaaaa", bg="#000000",
+    )
+    hint_label.pack(pady=(0, 5))
+
+    # The overlay window ID on the canvas (created once, repositioned on resize)
+    overlay_id = [None]
+
+    # ── Resize-aware CONTAIN scaling with Pillow ──
+    _resize_job = [None]
+
+    def _rescale(_event=None):
+        cw = canvas.winfo_width()
+        ch = canvas.winfo_height()
+        if cw < 2 or ch < 2 or orig_w < 1 or orig_h < 1:
+            return
+
+        # Contain: scale to fit entirely within canvas, no cropping
+        scale = min(cw / orig_w, ch / orig_h)
+        new_w = int(orig_w * scale)
+        new_h = int(orig_h * scale)
+
+        resized = pil_img.resize((new_w, new_h), Image.LANCZOS)
+
+        photo = ImageTk.PhotoImage(resized)
+        root._splash_photo = photo  # prevent GC
+
+        # Center the image; black canvas shows as letterbox bars
+        x = (cw - new_w) // 2
+        y = (ch - new_h) // 2
+        canvas.delete("bg_img")
+        canvas.create_image(x, y, image=photo, anchor="nw", tags="bg_img")
+
+        # (Re)place overlay near the bottom center, on top of the image
+        if overlay_id[0] is not None:
+            canvas.delete(overlay_id[0])
+        overlay_id[0] = canvas.create_window(
+            cw // 2, ch - 20, window=overlay, anchor="s",
+        )
+
+    def _on_configure(event):
+        if _resize_job[0] is not None:
+            canvas.after_cancel(_resize_job[0])
+        _resize_job[0] = canvas.after(50, _rescale)
+
+    canvas.bind("<Configure>", _on_configure)
+    root.after(80, _rescale)
+
+    # ── Dismiss ──
+    def _dismiss(*_):
+        root.unbind("<Return>")
+        for w in root.winfo_children():
+            w.destroy()
+        on_enter()
+
+    enter_btn.configure(command=_dismiss)
+    root.bind("<Return>", _dismiss)
+
+
+def main():
+    root = tk.Tk()
+
+    # Load shield icon before anything else
+    header_icon = load_app_icon(root)
+
+    style = ttk.Style(root)
+    default_theme = style.theme_use()
+    dark_mode = tk.BooleanVar(value=True)
+
+    # Apply dark theme immediately so the window never flickers light
+    style.theme_use("clam")
+    root.configure(bg="#1e1e1e")
+    root.title("CyberRisk Monitor")
+    root.geometry("1000x850")
+
+    def _clear_root():
+        for w in root.winfo_children():
+            w.destroy()
+
+    def _go_to_splash():
+        _clear_root()
+        # Re-apply dark bg so the splash background is consistent
+        root.configure(bg="#1e1e1e" if dark_mode.get() else "#f0f0f0")
+        # Update splash analysis timestamp if the var still exists
+        show_splash(root, _go_to_dashboard)
+
+    def _go_to_dashboard():
+        _clear_root()
+        # Re-apply current theme (may have toggled while on dashboard)
+        if dark_mode.get():
+            style.theme_use("clam")
+        else:
+            style.theme_use(default_theme)
+        apply_theme(style, dark_mode.get())
+        build_dashboard(root, style, default_theme, dark_mode, header_icon,
+                        on_back=_go_to_splash)
+
+    show_splash(root, _go_to_dashboard)
     root.mainloop()
 
 
